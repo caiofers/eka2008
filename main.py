@@ -2,7 +2,7 @@ import random
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from numpy.polynomial.polynomial import Polynomial
+import hashlib
 
 
 import filterEKG
@@ -33,11 +33,17 @@ def ___main___():
     # Definindo numero de blocos
     nBlocks = 20
 
-    vault, key = sender(data, nBlocks, frequency, seconds, vMin, vMax)
-    #receiver(vault, key, data, frequency, seconds, vMin, vMax, nBlocks)
+    featVectorBinSender = senderFeats(data, nBlocks, frequency, seconds, vMin, vMax)
+    featVectorBinReceiver = receiverFeats(data, nBlocks, frequency, seconds, vMin, vMax)
+
+    resultWSender = commitmentPhase(featVectorBinSender, featVectorBinReceiver)
+    resultWReceiver = commitmentPhase(featVectorBinSender, featVectorBinReceiver)
+
+    keySender = keyGen(resultWSender, featVectorBinSender)
+    keyReceiver = keyGen(resultWReceiver, featVectorBinReceiver)
 
 
-def sender(data, nBlocks, frequency, seconds, vMin, vMax):
+def senderFeats(data, nBlocks, frequency, seconds, vMin, vMax):
 
     # Pegando 625 amostras dos dados filtrados (125hz durante 5 segundos) 
     data1 = np.array(data[100:725])
@@ -46,29 +52,90 @@ def sender(data, nBlocks, frequency, seconds, vMin, vMax):
     division = featsEKG.divideSamples(data1, frequency, seconds)
 
     # Cálculo das características
-    featVectorBin1, featVectorInt1 = featsEKG.calcFeats(division, nBlocks, frequency)
+    featVectorBin1 = featsEKG.calcFeats(division, nBlocks, frequency)
+
+    return featVectorBin1
 
 
-    return featVectorBin1, featVectorInt1
-
-
-def receiver(vault, key, data, frequency, seconds, vMin, vMax, nBlocks):
+def receiverFeats(data, nBlocks, frequency, seconds, vMin, vMax):
     # Pegando mais 625 amostras dos dados filtrados (Simulando a parte do receptor)
-    data2 = np.array(data[110:740])
+    data2 = np.array(data[100:725])
 
     # Dividindo as amostras em 5 janelas de 125 amostras (1 janela para cada segundo) 
     division = featsEKG.divideSamples(data2, frequency, seconds)
 
     # Cálculo das características
-    featVectorBin2, featVectorInt2 = featsEKG.calcFeats(division, nBlocks, frequency)
+    featVectorBin2 = featsEKG.calcFeats(division, nBlocks, frequency)
 
+    return featVectorBin2
 
-    if ():
-        print("Accepted")
-    else:
-        print("Not Accepted")
+def commitmentPhase(featVectorBinSender, featVectorBinReceiver):
+    matrizU = []
+    matrizV = []
+    for i in featVectorBinSender:
+        matrizU.append(encrypt_string(i))
+    for i in featVectorBinReceiver:
+        matrizV.append(encrypt_string(i))
+    matrizW = []
+    for i in range(20):
+        listaW = []
+        for j in range(20):
+            listaW.append(hamdist(matrizU[i], matrizV[j]))
+        matrizW.append(listaW)
+    return matrizW
 
+def encrypt_string(hash_string):
+    sha_signature = \
+        hashlib.sha256(hash_string.encode()).hexdigest()
+    return sha_signature
 
+def hamdist(str1, str2):
+    """Count the # of differences between equal length strings str1 and str2"""
 
+    diffs = 0
+    for ch1, ch2 in zip(str1, str2):
+        if ch1 != ch2:
+            diffs += 1
+    return diffs
 
+def keyGen(resultW, feats):
+    keyMatList = []
+    while(verificarMatrizW(resultW)):
+        minElement, minI, minJ = positionMinMatriz(resultW)
+        if(minElement == 0):
+            keyMatList.append(feats[minI])
+            for k in range(len(resultW[minI])):
+                resultW[minI][k] = 1
+            for u in range(len(resultW)):
+                resultW[u][minJ] = 1
+        else:
+            pass
+    print("KeyMat")
+    keyMat = []
+    #for element in KeyMatList:
+    #    for el in element:
+
+    #    element = ''.join(str(element))
+    #    print(element)
+    keyMatList = ''.join(keyMatList)
+    return encrypt_string(keyMatList)
+
+def verificarMatrizW(resultW):
+    for i in resultW:
+        for j in i:
+            if j != 1:
+                return True
+    return False
+
+def positionMinMatriz(resultW):
+    minI = 0
+    minJ = 0
+    minElement = resultW[minI][minJ]
+    for i in range(len(resultW)):
+        for j in range(len(resultW[i])):
+            if resultW[i][j] < 1:
+                minElement = resultW[i][j]
+                minI = i
+                minJ = j
+    return minElement, minI, minJ
 ___main___()

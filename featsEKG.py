@@ -6,7 +6,6 @@ import fftEKG
 
 def calcFeats(division, nBlocks, frequency, verbose=False, plot=False, save=False):
     featVectorBin = []
-    featVectorInt = []
     index = 0
 
     if verbose: print("\nCALCÚLO DAS FEATS - START")
@@ -30,26 +29,22 @@ def calcFeats(division, nBlocks, frequency, verbose=False, plot=False, save=Fals
         # Construindo vetor de caracteristicas com cada ponto (Cada ponto resulta em 4 bits)
         for k in range(len(quantizedArray)):
             featVectorBin.append(np.binary_repr(quantizedArray[k], width=4))
-            featVectorInt.append(converterb_d(featVectorBin[k]))
 
     if verbose:
         print("Vetor de características (binário): ")
         print(featVectorBin)
-        print("Vetor de características (inteiro): ")
-        print(featVectorInt)
         print("\nCALCÚLO DAS FEATS - END")
 
     blocksBin = []
-    blocksInt = []
 
     lenFeats = len(featVectorBin)
     for i in range(nBlocks):
         start = int(i*lenFeats/nBlocks)
         end = int((i+1)*lenFeats/nBlocks)
-        blocksBin.append(featVectorBin[start:end])
-        blocksInt.append(featVectorInt[start:end])
-
-    return blocksBin, blocksInt
+        blocksBin.append(''.join(featVectorBin[start:end]))
+    print("blocksBin")
+    print(blocksBin)
+    return blocksBin
 
 
 def divideSamples(data, frequency, sec):

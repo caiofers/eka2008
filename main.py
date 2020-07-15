@@ -13,18 +13,15 @@ import plotEKG
 
 def ___main___():
     # Abrindo o arquivo com os dados ECG
-    data = pd.read_csv("p000020-2183-04-28-17-47.csv", header=None)
+    data = pd.read_csv("p000020-2183-04-28-17-471.csv", header=None)
     
     # Extraindo as linhas do arquivo, pegando a segunda coluna (II - ECG)
-    x = data[1:10000][1]
-    x = np.array(x).astype(int)
+    data = data[1:10000][1]
+    data = np.array(data).astype(int)
 
     #Definindo máx e min dos dados para filtar
     vMin = -10
     vMax = 10
-
-    # Aplicando filtro nos dados
-    data = filterEKG.filterEKG(x, vMin, vMax)
 
      # Definindo frequencia e quantidade de tempo para coleta das amostras
     frequency = 125
@@ -42,14 +39,23 @@ def ___main___():
     keySender = keyGen(resultWSender, featVectorBinSender)
     keyReceiver = keyGen(resultWReceiver, featVectorBinReceiver)
 
+    if(keySender == keyReceiver):
+        print("ACCEPTED")
+    else:
+        print("NOT ACCEPTED")
+
 
 def senderFeats(data, nBlocks, frequency, seconds, vMin, vMax):
 
-    # Pegando 625 amostras dos dados filtrados (125hz durante 5 segundos) 
-    data1 = np.array(data[100:725])
-    
+
+    # Pegando 625 amostras dos dados (125hz durante 5 segundos) 
+    data = data[0:(frequency*seconds)]
+
+    # Aplicando filtro nos dados
+    data = np.array(filterEKG.filterEKG(data, vMin, vMax))
+
     # Dividindo as amostras em 5 janelas de 125 amostras (1 janela para cada segundo) 
-    division = featsEKG.divideSamples(data1, frequency, seconds)
+    division = featsEKG.divideSamples(data, frequency, seconds)
 
     # Cálculo das características
     featVectorBin1 = featsEKG.calcFeats(division, nBlocks, frequency)
@@ -58,11 +64,14 @@ def senderFeats(data, nBlocks, frequency, seconds, vMin, vMax):
 
 
 def receiverFeats(data, nBlocks, frequency, seconds, vMin, vMax):
-    # Pegando mais 625 amostras dos dados filtrados (Simulando a parte do receptor)
-    data2 = np.array(data[100:725])
+    # Pegando 625 amostras dos dados (125hz durante 5 segundos) 
+    data = data[0:(frequency*seconds)]
+
+    # Aplicando filtro nos dados
+    data = np.array(filterEKG.filterEKG(data, vMin, vMax))
 
     # Dividindo as amostras em 5 janelas de 125 amostras (1 janela para cada segundo) 
-    division = featsEKG.divideSamples(data2, frequency, seconds)
+    division = featsEKG.divideSamples(data, frequency, seconds)
 
     # Cálculo das características
     featVectorBin2 = featsEKG.calcFeats(division, nBlocks, frequency)

@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy import fftpack
+from scipy import signal
 import pandas as pd
 import hashlib
 import random
@@ -10,12 +11,10 @@ import binascii
 
 class Sensor:
 
-    def __init__(self, frequency, seconds, numberOfBlocks, filterMin, filterMax):
+    def __init__(self, frequency, seconds, numberOfBlocks):
         self.__frequency = frequency
         self.__seconds = seconds
         self.__numberOfBlocks = numberOfBlocks
-        self.__filterMin = filterMin
-        self.__filterMax = filterMax
         self.__verbose = False
         self.__plot = False
         self.__savePlot = False
@@ -27,14 +26,19 @@ class Sensor:
         self.__plot = plot
         self.__savePlot = savePlot
 
-    def extractFeats(self, data):
+    def extractFeats(self, record):
+
+        data =[]
+
+        for i in range(len(record.d_signal)):
+            data.extend(record.d_signal[i])
+
         # Pegando 625 amostras dos dados (125hz durante 5 segundos) 
         data = data[0:(self.__frequency*self.__seconds)]
 
         # Aplicando filtro nos dados
         data = np.array(self.__filter(data))
 
-        # Dividindo as amostras em 5 janelas de 125 amostras (1 janela para cada segundo) 
         division = self.__divideSamples(data)
 
         # Cálculo das características
@@ -42,24 +46,20 @@ class Sensor:
         return self.__featsVectorBin
 
     def __filter(self, data):
-        # Criação de uma lista vazia para adicionar os dados filtrados
-        auxData = []
-        for i in range(len(data)):
-            if int(data[i]) < self.__filterMax and int(data[i]) > self.__filterMin:
-                # Se o dado estiver entre o máximo e míno pré-estabelecido, o valor é adicionado à lista de dados filtrados
-                auxData.append(data[i])
+        b, a = signal.butter(3, 0.05)
+        filtered = signal.filtfilt(b, a, data)
         
         if self.__verbose:
             print("\nDados sem filtro: ")
             print(data)
             print("\nDados filtrados: ")
-            print(np.array(auxData))
+            print(filtered)
         
         if self.__plot:
             self.__plotPy('Sample', 'Signal', data)
-            self.__plotPy('Sample', 'Signal w/ Filter', np.array(auxData))
+            self.__plotPy('Sample', 'Signal w/ Filter', filtered)
         
-        return np.array(auxData)
+        return filtered
 
     def __plotPy(self, xlabel, ylabel, data):
         plt.title(xlabel + ' X ' + ylabel)
@@ -78,9 +78,9 @@ class Sensor:
     def __divideSamples(self, data):
         auxData = []
         division = []
-        #Dividindo as amostras em janelas (sec é a quantidade de segundos/janelas)
+        #Dividindo as amostras em janelas
         for i in range(self.__seconds):
-            for j in range(int(len(data)/self.__seconds)): #(frequency é a quantidade de amostras que tem em cada segundo)
+            for j in range(int(len(data)/5)): #(frequency é a quantidade de amostras que tem em cada segundo)
                 auxData.append(data[(i + 1) * j])
             np.array(auxData)
             division.append(auxData.copy())
@@ -310,7 +310,7 @@ class Sensor:
     def receiveDecommitmentMessage(self, message):
         receivedDecommitmentG = message["G"]
         receivedDecommitmentMAC = message["MAC"]
-        self.__checkMAC(receivedDecommitmentG, receivedDecommitmentMAC)
+        return self.__checkMAC(receivedDecommitmentG, receivedDecommitmentMAC)
     
     def __checkMAC(self, receivedDecommitmentG, receivedDecommitmentMAC):
 
@@ -320,7 +320,10 @@ class Sensor:
             checkMAC2 = self.__macHMAC(str(self.__matrixV), str(keyPrivateReceived))
             if(checkMAC2 == self.__receivedCommitmentMAC):
                 print("Accepted")
+                return True
             else:
                 print("Not Accepted")
+                return False
         else:
                 print("Not Accepted")
+                return False

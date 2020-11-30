@@ -11,12 +11,12 @@ def featStatistics():
     FARArray = []
     random.seed(time.time())
 
-    for i in range(1):
-        AR, FRR = testFRR(i+1, 1, 500)
+    for i in range(50):
+        AR, FRR = testFRR(i+1, 100, 50)
         ARArray.append(AR)
         FRRArray.append(FRR)
 
-        RR, FAR = testFAR(i+1, 1, 500)
+        RR, FAR = testFAR(i+1, 100, 50)
         RRArray.append(RR)
         FARArray.append(FAR)
 
@@ -34,15 +34,21 @@ def featStatistics():
     print("------------------------------------------")
     print("------------------------------------------")
     print("------------------------------------------")
-    print("Acceptance Rate")
+    print("Acceptance Rate: " + str((sum(ARArray)/len(ARArray))*100) + "%")
     print(str((sum(ARArray)/len(ARArray))*100)+"%")
-    print("False Rejection Rate")
-    print(str((sum(FRRArray)/len(FRRArray))*100)+"%")
+    print("False Rejection Rate: " + str((sum(FRRArray)/len(FRRArray))*100) + "%")
     print("---------------------")
-    print("Rejection Rate")
-    print(str((sum(RRArray)/len(RRArray))*100)+"%")
-    print("False Acceptance Rate")
-    print(str((sum(FARArray)/len(FARArray))*100)+"%")
+    print("Rejection Rate: " + str((sum(RRArray)/len(RRArray))*100) + "%")
+    print("False Acceptance Rate: " + str((sum(FARArray)/len(FARArray))*100) + "%")
+
+    archive = open('featStatistics.txt', 'w')
+    archive.write("\nTotal Statistics")
+    archive.write("\nAcceptance Rate: " + str((sum(ARArray)/len(ARArray))*100) + "%")
+    archive.write("\nFalse Rejection Rate: " + str((sum(FRRArray)/len(FRRArray))*100) + "%")
+    archive.write("\n---------------------")
+    archive.write("\nRejection Rate: " + str((sum(RRArray)/len(RRArray))*100) + "%")
+    archive.write("\nFalse Acceptance Rate: " + str((sum(FARArray)/len(FARArray))*100) + "%")
+    archive.close()
 
 def testFRR(recordNum, iterations, sampleVariation):
     count = 0
@@ -52,8 +58,8 @@ def testFRR(recordNum, iterations, sampleVariation):
         randSampleFromR = random.randint(0, 1)
         if(randSampleFromR == 0): sampleFromR = sampleFromT - sampleVariation
         else: sampleFromR = sampleFromT + sampleVariation
-        recordTransmitter = wfdb.rdrecord('samples/'+str(recordNum), physical=False, sampfrom=sampleFromT, channel_names=['avf'])
-        recordReceiver = wfdb.rdrecord('samples/'+str(recordNum), physical=False, sampfrom=sampleFromR, channel_names=['avf'])
+        recordTransmitter = wfdb.rdrecord('samples/'+str(recordNum), physical=False, sampfrom=0, channel_names=['avf'])
+        recordReceiver = wfdb.rdrecord('samples/'+str(recordNum), physical=False, sampfrom=0, channel_names=['avf'])
         if(EKAPROTOCOL(recordTransmitter, recordReceiver)):
             count = count + 1
         else:
@@ -65,15 +71,15 @@ def testFAR(recordNum, iterations, sampleVariation):
     countFAR = 0
     recordNumT = recordNum
     for i in range(iterations):
-        sampleFromT = random.randint(sampleVariation, 1000)
+        sampleFromT = random.randint(sampleVariation, 500)
         randSampleFromR = random.randint(0, 1)
         if(randSampleFromR == 0): sampleFromR = sampleFromT - sampleVariation
         else: sampleFromR = sampleFromT + sampleVariation
         recordNumR = random.randint(1, 200)
         while recordNumR == recordNumT:
             recordNumR = random.randint(1, 200) 
-        recordTransmitter = wfdb.rdrecord('samples/'+str(recordNumT), physical=False, sampfrom=sampleFromT, channel_names=['avf'])
-        recordReceiver = wfdb.rdrecord('samples/'+str(recordNumR), physical=False, sampfrom=sampleFromR, channel_names=['avf'])
+        recordTransmitter = wfdb.rdrecord('samples/'+str(recordNumT), physical=False, sampfrom=0, channel_names=['avf'])
+        recordReceiver = wfdb.rdrecord('samples/'+str(recordNumR), physical=False, sampfrom=0, channel_names=['avf'])
         if(EKAPROTOCOL(recordTransmitter, recordReceiver)):
             countFAR = countFAR + 1
         else:
@@ -83,8 +89,8 @@ def testFAR(recordNum, iterations, sampleVariation):
 
 def EKAPROTOCOL(recordTransmitter, recordReceiver):
 
-    frequency = 125
-    seconds = 5
+    frequency = 500
+    seconds = 10
 
     numberOfBlocks = 20
 

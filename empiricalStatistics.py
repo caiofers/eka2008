@@ -18,7 +18,7 @@ def timeStatistics():
     totalTimeReceiverArray = []
     memoryPeakArray = []
 
-    for i in range(200):
+    for i in range(50):
         recordTransmitter = wfdb.rdrecord('samples/'+str(i+1), physical=False, sampfrom=0, channel_names=['avf'])
         recordReceiver = wfdb.rdrecord('samples/'+str(i+1), physical=False, sampfrom=0, channel_names=['avf'])
         
@@ -110,12 +110,70 @@ def timeStatistics():
     print("Standard Deviation: " + str(statistics.pstdev(memoryPeakArray)) + " Bytes")
     print("Variance: " + str(statistics.pvariance(memoryPeakArray)) + " Bytes")
 
+    archive = open('empiricalStatistics', 'w')
+    
+    archive.write("\nTotal statistics")
+
+    archive.write("\n\nTime to Extract Features on Transmitter")
+    archive.write("\nMean: " + str(round(statistics.mean(timeExtractFeatTransmitterArray), 2)).replace('.', ','))
+    archive.write("\nStandard Deviation: " + str(round(statistics.pstdev(timeExtractFeatTransmitterArray), 2)).replace('.', ','))
+    archive.write("\nVariance: " + str(round(statistics.pvariance(timeExtractFeatTransmitterArray), 2)).replace('.', ','))
+
+    archive.write("\n\nTime to Extract Features on Receiver")
+    archive.write("\nMean: " + str(round(statistics.mean(timeExtractFeatReceiverArray), 2)).replace('.', ','))
+    archive.write("\nStandard Deviation: " + str(round(statistics.pstdev(timeExtractFeatReceiverArray), 2)).replace('.', ','))
+    archive.write("\nVariance: " + str(round(statistics.pvariance(timeExtractFeatReceiverArray), 2)).replace('.', ','))
+
+    archive.write("\n\nTime of commitment phase on Transmitter")
+    archive.write("\nMean: " + str(round(statistics.mean(timeCommitmentPhaseTransmitterArray), 2)).replace('.', ','))
+    archive.write("\nStandard Deviation: " + str(round(statistics.pstdev(timeCommitmentPhaseTransmitterArray), 2)).replace('.', ','))
+    archive.write("\nVariance: " + str(round(statistics.pvariance(timeCommitmentPhaseTransmitterArray), 2)).replace('.', ','))
+
+    archive.write("\n\nTime of commitment phase on Receiver")
+    archive.write("\nMean: " + str(round(statistics.mean(timeCommitmentPhaseReceiverArray), 2)).replace('.', ','))
+    archive.write("\nStandard Deviation: " + str(round(statistics.pstdev(timeCommitmentPhaseReceiverArray), 2)).replace('.', ','))
+    archive.write("\nVariance: " + str(round(statistics.pvariance(timeCommitmentPhaseReceiverArray), 2)).replace('.', ','))
+
+    archive.write("\n\nTime to process common key on Transmitter")
+    archive.write("\nMean: " + str(round(statistics.mean(timeProcessCommomKeyTransmitterArray), 2)).replace('.', ','))
+    archive.write("\nStandard Deviation: " + str(round(statistics.pstdev(timeProcessCommomKeyTransmitterArray), 2)).replace('.', ','))
+    archive.write("\nVariance: " + str(round(statistics.pvariance(timeProcessCommomKeyTransmitterArray), 2)).replace('.', ','))
+
+    archive.write("\n\nTime to process common key on Receiver")
+    archive.write("\nMean: " + str(round(statistics.mean(timeProcessCommomKeyReceiverArray), 2)).replace('.', ','))
+    archive.write("\nStandard Deviation: " + str(round(statistics.pstdev(timeProcessCommomKeyReceiverArray), 2)).replace('.', ','))
+    archive.write("\nVariance: " + str(round(statistics.pvariance(timeProcessCommomKeyReceiverArray), 2)).replace('.', ','))
+
+    archive.write("\n\nTime of de-commitment phase on Transmitter")
+    archive.write("\nMean: " + str(round(statistics.mean(timeDeCommitmentPhaseTransmitterArray), 2)).replace('.', ','))
+    archive.write("\nStandard Deviation: " + str(round(statistics.pstdev(timeDeCommitmentPhaseTransmitterArray), 2)).replace('.', ','))
+    archive.write("\nVariance: " + str(round(statistics.pvariance(timeDeCommitmentPhaseTransmitterArray), 2)).replace('.', ','))
+
+    archive.write("\n\nTime of de-commitment phase on Receiver")
+    archive.write("\nMean: " + str(round(statistics.mean(timeDeCommitmentPhaseReceiverArray), 2)).replace('.', ','))
+    archive.write("\nStandard Deviation: " + str(round(statistics.pstdev(timeDeCommitmentPhaseReceiverArray), 2)).replace('.', ','))
+    archive.write("\nVariance: " + str(round(statistics.pvariance(timeDeCommitmentPhaseReceiverArray), 2)).replace('.', ','))
+
+    archive.write("\n\nTotal Time Transmmiter")
+    archive.write("\nMean: " + str(round(statistics.mean(totalTimeTransmitterArray), 2)).replace('.', ','))
+    archive.write("\nStandard Deviation: " + str(round(statistics.pstdev(totalTimeTransmitterArray), 2)).replace('.', ','))
+    archive.write("\nVariance: " + str(round(statistics.pvariance(totalTimeTransmitterArray), 2)).replace('.', ','))
+
+    archive.write("\n\nTotal Time Receiver")
+    archive.write("\nMean: " + str(round(statistics.mean(totalTimeReceiverArray), 2)).replace('.', ','))
+    archive.write("\nStandard Deviation: " + str(round(statistics.pstdev(totalTimeReceiverArray), 2)).replace('.', ','))
+    archive.write("\nVariance: " + str(round(statistics.pvariance(totalTimeReceiverArray), 2)).replace('.', ','))
+
+    archive.write()
+
+    archive.close()
+
 
 def EKAPROTOCOL(recordTransmitter, recordReceiver):
 
     # Definindo frequencia e quantidade de tempo para coleta das amostras
     frequency = 500
-    seconds = 2
+    seconds = 10
 
     # Definindo ordem do polinômio
     numberOfBlocks = 20
@@ -184,7 +242,7 @@ def EKAPROTOCOL(recordTransmitter, recordReceiver):
     fim = time.time()
     timeDeCommitmentPhaseTransmitter = fim - inicio
     
-    return timeExtractFeatTransmitter, timeExtractFeatReceiver, timeCommitmentPhaseTransmitter, timeCommitmentPhaseReceiver, timeProcessCommomKeyTransmitter, timeProcessCommomKeyReceiver, timeDeCommitmentPhaseTransmitter, timeDeCommitmentPhaseTransmitter
+    return timeExtractFeatTransmitter*1000, timeExtractFeatReceiver*1000, timeCommitmentPhaseTransmitter*1000, timeCommitmentPhaseReceiver*1000, timeProcessCommomKeyTransmitter*1000, timeProcessCommomKeyReceiver*1000, timeDeCommitmentPhaseTransmitter*1000, timeDeCommitmentPhaseTransmitter*1000
 
 
 timeStatistics()

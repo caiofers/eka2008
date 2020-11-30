@@ -37,7 +37,7 @@ class Sensor:
         data = data[0:(self.__frequency*self.__seconds)]
 
         # Aplicando filtro nos dados
-        data = np.array(self.__filter(data))
+        #data = np.array(self.__filter(data))
 
         division = self.__divideSamples(data)
 
@@ -78,9 +78,11 @@ class Sensor:
     def __divideSamples(self, data):
         auxData = []
         division = []
+        #Definindo numero de janelas
+        numOfWindows = 8
         #Dividindo as amostras em janelas
-        for i in range(self.__seconds):
-            for j in range(int(len(data)/5)): #(frequency é a quantidade de amostras que tem em cada segundo)
+        for i in range(numOfWindows):
+            for j in range(int(len(data)/numOfWindows)): #(frequency é a quantidade de amostras que tem em cada segundo)
                 auxData.append(data[(i + 1) * j])
             np.array(auxData)
             division.append(auxData.copy())
@@ -197,6 +199,7 @@ class Sensor:
         self.__hashBlocks()
         message["HASHEDBLOCKS"] = self.__matrixU
         message["MAC"] = self.__macHMAC(str(self.__matrixU), str(self.__keyPrivate))
+        print("Tamanho mensagem:" + message.bit_length())
         return message
 
     def __createBlocks(self):
@@ -277,7 +280,7 @@ class Sensor:
                 for u in range(len(matrixW)):
                     matrixW[u][minJ] = 1
             else:
-                pass
+                return self.__hashSHA256('error')
         keyMatList = ''.join(keyMatList)
         return self.__hashSHA256(keyMatList)
 
@@ -294,7 +297,7 @@ class Sensor:
         minElement = matrixW[minI][minJ]
         for i in range(len(matrixW)):
             for j in range(len(matrixW[i])):
-                if matrixW[i][j] < 1:
+                if matrixW[i][j] < minElement:
                     minElement = matrixW[i][j]
                     minI = i
                     minJ = j
@@ -313,17 +316,20 @@ class Sensor:
         return self.__checkMAC(receivedDecommitmentG, receivedDecommitmentMAC)
     
     def __checkMAC(self, receivedDecommitmentG, receivedDecommitmentMAC):
-
-        checkMAC1 = self.__macHMAC(str(receivedDecommitmentG), str(int(self.__keyCommon, 16)))
-        if(checkMAC1 == receivedDecommitmentMAC):
-            keyPrivateReceived = np.bitwise_xor(receivedDecommitmentG, int(self.__keyCommon, 16))
-            checkMAC2 = self.__macHMAC(str(self.__matrixV), str(keyPrivateReceived))
-            if(checkMAC2 == self.__receivedCommitmentMAC):
-                print("Accepted")
-                return True
+        if(self.__keyCommon != self.__hashSHA256('error')):
+            checkMAC1 = self.__macHMAC(str(receivedDecommitmentG), str(int(self.__keyCommon, 16)))
+            if(checkMAC1 == receivedDecommitmentMAC):
+                keyPrivateReceived = np.bitwise_xor(receivedDecommitmentG, int(self.__keyCommon, 16))
+                checkMAC2 = self.__macHMAC(str(self.__matrixV), str(keyPrivateReceived))
+                if(checkMAC2 == self.__receivedCommitmentMAC):
+                    #print("Accepted")
+                    return True
+                else:
+                    #print("Not Accepted")
+                    return False
             else:
-                print("Not Accepted")
-                return False
+                    #print("Not Accepted")
+                    return False
         else:
-                print("Not Accepted")
-                return False
+           #print("Not Accepted")
+            return False 

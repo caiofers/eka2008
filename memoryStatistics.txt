@@ -1,0 +1,52 @@
+
+Total statistics
+
+Memory Peak to Extract Features on Transmitter
+Mean: 234,97
+Standard Deviation: 0,01
+Variance: 0,0
+
+Memory Peak to Extract Features on Receiver
+Mean: 234,96
+Standard Deviation: 0,0
+Variance: 0,0
+
+Memory Peak of commitment phase on Transmitter
+Mean: 9,43
+Standard Deviation: 0,0
+Variance: 0,0
+
+Memory Peak of commitment phase on Receiver
+Mean: 8,87
+Standard Deviation: 0,0
+Variance: 0,0
+
+Memory Peak to process common key on Transmitter
+Mean: 8,22
+Standard Deviation: 0,05
+Variance: 0,0
+
+Memory Peak to process common key on Receiver
+Mean: 8,21
+Standard Deviation: 0,0
+Variance: 0,0
+
+Memory Peak of de-commitment phase on Transmitter
+Mean: 3,54
+Standard Deviation: 0,0
+Variance: 0,0
+
+Memory Peak of de-commitment phase on Receiver
+Mean: 3,54
+Standard Deviation: 0,0
+Variance: 0,0
+
+Total Memory Peak Transmmiter
+Mean: 256,15
+Standard Deviation: 0,05
+Variance: 0,0
+
+Total Memory Peak Receiver
+Mean: 255,58
+Standard Deviation: 0,0
+Variance: 0,0

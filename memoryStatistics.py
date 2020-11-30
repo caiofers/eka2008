@@ -16,7 +16,7 @@ def memoryPeakStatistics():
     totalMemoryPeakTransmitterArray = []
     totalMemoryPeakReceiverArray = []
 
-    for i in range(200):
+    for i in range(50):
         recordTransmitter = wfdb.rdrecord('samples/'+str(i+1), physical=False, sampfrom=0, channel_names=['avf'])
         recordReceiver = wfdb.rdrecord('samples/'+str(i+1), physical=False, sampfrom=0, channel_names=['avf'])
         
@@ -97,12 +97,67 @@ def memoryPeakStatistics():
     print("Standard Deviation: " + str(statistics.pstdev(totalMemoryPeakReceiverArray)))
     print("Variance: " + str(statistics.pvariance(totalMemoryPeakReceiverArray)))
 
+    archive = open('memoryStatistics', 'w')
+
+    archive.write("\nTotal statistics")
+
+    archive.write("\n\nMemory Peak to Extract Features on Transmitter")
+    archive.write("\nMean: " + str(round(statistics.mean(memoryPeakExtractFeatTransmitterArray), 2)).replace('.', ','))
+    archive.write("\nStandard Deviation: " + str(round(statistics.pstdev(memoryPeakExtractFeatTransmitterArray), 2)).replace('.', ','))
+    archive.write("\nVariance: " + str(round(statistics.pvariance(memoryPeakExtractFeatTransmitterArray), 2)).replace('.', ','))
+
+    archive.write("\n\nMemory Peak to Extract Features on Receiver")
+    archive.write("\nMean: " + str(round(statistics.mean(memoryPeakExtractFeatReceiverArray), 2)).replace('.', ','))
+    archive.write("\nStandard Deviation: " + str(round(statistics.pstdev(memoryPeakExtractFeatReceiverArray), 2)).replace('.', ','))
+    archive.write("\nVariance: " + str(round(statistics.pvariance(memoryPeakExtractFeatReceiverArray), 2)).replace('.', ','))
+
+    archive.write("\n\nMemory Peak of commitment phase on Transmitter")
+    archive.write("\nMean: " + str(round(statistics.mean(memoryPeakCommitmentPhaseTransmitterArray), 2)).replace('.', ','))
+    archive.write("\nStandard Deviation: " + str(round(statistics.pstdev(memoryPeakCommitmentPhaseTransmitterArray), 2)).replace('.', ','))
+    archive.write("\nVariance: " + str(round(statistics.pvariance(memoryPeakCommitmentPhaseTransmitterArray), 2)).replace('.', ','))
+
+    archive.write("\n\nMemory Peak of commitment phase on Receiver")
+    archive.write("\nMean: " + str(round(statistics.mean(memoryPeakCommitmentPhaseReceiverArray), 2)).replace('.', ','))
+    archive.write("\nStandard Deviation: " + str(round(statistics.pstdev(memoryPeakCommitmentPhaseReceiverArray), 2)).replace('.', ','))
+    archive.write("\nVariance: " + str(round(statistics.pvariance(memoryPeakCommitmentPhaseReceiverArray), 2)).replace('.', ','))
+
+    archive.write("\n\nMemory Peak to process common key on Transmitter")
+    archive.write("\nMean: " + str(round(statistics.mean(memoryPeakProcessCommomKeyTransmitterArray), 2)).replace('.', ','))
+    archive.write("\nStandard Deviation: " + str(round(statistics.pstdev(memoryPeakProcessCommomKeyTransmitterArray), 2)).replace('.', ','))
+    archive.write("\nVariance: " + str(round(statistics.pvariance(memoryPeakProcessCommomKeyTransmitterArray), 2)).replace('.', ','))
+
+    archive.write("\n\nMemory Peak to process common key on Receiver")
+    archive.write("\nMean: " + str(round(statistics.mean(memoryPeakProcessCommomKeyReceiverArray), 2)).replace('.', ','))
+    archive.write("\nStandard Deviation: " + str(round(statistics.pstdev(memoryPeakProcessCommomKeyReceiverArray), 2)).replace('.', ','))
+    archive.write("\nVariance: " + str(round(statistics.pvariance(memoryPeakProcessCommomKeyReceiverArray), 2)).replace('.', ','))
+
+    archive.write("\n\nMemory Peak of de-commitment phase on Transmitter")
+    archive.write("\nMean: " + str(round(statistics.mean(memoryPeakDeCommitmentPhaseTransmitterArray), 2)).replace('.', ','))
+    archive.write("\nStandard Deviation: " + str(round(statistics.pstdev(memoryPeakDeCommitmentPhaseTransmitterArray), 2)).replace('.', ','))
+    archive.write("\nVariance: " + str(round(statistics.pvariance(memoryPeakDeCommitmentPhaseTransmitterArray), 2)).replace('.', ','))
+
+    archive.write("\n\nMemory Peak of de-commitment phase on Receiver")
+    archive.write("\nMean: " + str(round(statistics.mean(memoryPeakDeCommitmentPhaseReceiverArray), 2)).replace('.', ','))
+    archive.write("\nStandard Deviation: " + str(round(statistics.pstdev(memoryPeakDeCommitmentPhaseReceiverArray), 2)).replace('.', ','))
+    archive.write("\nVariance: " + str(round(statistics.pvariance(memoryPeakDeCommitmentPhaseReceiverArray), 2)).replace('.', ','))
+
+    archive.write("\n\nTotal Memory Peak Transmmiter")
+    archive.write("\nMean: " + str(round(statistics.mean(totalMemoryPeakTransmitterArray), 2)).replace('.', ','))
+    archive.write("\nStandard Deviation: " + str(round(statistics.pstdev(totalMemoryPeakTransmitterArray), 2)).replace('.', ','))
+    archive.write("\nVariance: " + str(round(statistics.pvariance(totalMemoryPeakTransmitterArray), 2)).replace('.', ','))
+
+    archive.write("\n\nTotal Memory Peak Receiver")
+    archive.write("\nMean: " + str(round(statistics.mean(totalMemoryPeakReceiverArray), 2)).replace('.', ','))
+    archive.write("\nStandard Deviation: " + str(round(statistics.pstdev(totalMemoryPeakReceiverArray), 2)).replace('.', ','))
+    archive.write("\nVariance: " + str(round(statistics.pvariance(totalMemoryPeakReceiverArray), 2)).replace('.', ','))
+
+    archive.close()
 
 def EKAPROTOCOL(recordTransmitter, recordReceiver):
 
     # Definindo frequencia e quantidade de tempo para coleta das amostras
     frequency = 500
-    seconds = 2
+    seconds = 10
 
     # Definindo ordem do polinômio
     numberOfBlocks = 20

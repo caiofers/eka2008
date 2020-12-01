@@ -199,7 +199,6 @@ class Sensor:
         self.__hashBlocks()
         message["HASHEDBLOCKS"] = self.__matrixU
         message["MAC"] = self.__macHMAC(str(self.__matrixU), str(self.__keyPrivate))
-        print("Tamanho mensagem:" + message.bit_length())
         return message
 
     def __createBlocks(self):

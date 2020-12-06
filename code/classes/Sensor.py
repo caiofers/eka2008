@@ -11,10 +11,12 @@ import binascii
 
 class Sensor:
 
-    def __init__(self, frequency, seconds, numberOfBlocks):
+    # Inicialização do sensor com número de bloco e ID
+    def __init__(self, frequency, seconds, numberOfBlocks, IDSensor):
         self.__frequency = frequency
         self.__seconds = seconds
         self.__numberOfBlocks = numberOfBlocks
+        self.__IDSensor = IDSensor
         self.__verbose = False
         self.__plot = False
         self.__savePlot = False
@@ -27,18 +29,17 @@ class Sensor:
         self.__savePlot = savePlot
 
     def extractFeats(self, record):
-
         data =[]
-
         for i in range(len(record.d_signal)):
             data.extend(record.d_signal[i])
 
-        # Pegando 625 amostras dos dados (125hz durante 5 segundos) 
+        # Pegando amostras dos dados 
         data = data[0:(self.__frequency*self.__seconds)]
 
         # Aplicando filtro nos dados
-        #data = np.array(self.__filter(data))
+        data = np.array(self.__filter(data))
 
+        # Dividindo os dados filtrados em janelas
         division = self.__divideSamples(data)
 
         # Cálculo das características
@@ -48,17 +49,17 @@ class Sensor:
     def __filter(self, data):
         b, a = signal.butter(3, 0.05)
         filtered = signal.filtfilt(b, a, data)
-        
+    
         if self.__verbose:
             print("\nDados sem filtro: ")
             print(data)
             print("\nDados filtrados: ")
             print(filtered)
-        
+
         if self.__plot:
             self.__plotPy('Sample', 'Signal', data)
             self.__plotPy('Sample', 'Signal w/ Filter', filtered)
-        
+
         return filtered
 
     def __plotPy(self, xlabel, ylabel, data):
@@ -70,7 +71,6 @@ class Sensor:
         if self.__savePlot: plt.savefig('graficos/filtrado.png')
         plt.show()
 
-
         plt.plot(np.arange(len(data)), data)
         if self.__savePlot: plt.savefig('graficos/bruto.png')
         plt.show()
@@ -78,15 +78,18 @@ class Sensor:
     def __divideSamples(self, data):
         auxData = []
         division = []
+
         #Definindo numero de janelas
         numOfWindows = 8
-        #Dividindo as amostras em janelas
+
+        #Dividindo as amostras em janelas de controlada 
         for i in range(numOfWindows):
-            for j in range(int(len(data)/numOfWindows)): #(frequency é a quantidade de amostras que tem em cada segundo)
+            for j in range(int(len(data)/numOfWindows)):
                 auxData.append(data[(i + 1) * j])
             np.array(auxData)
             division.append(auxData.copy())
             auxData.clear()
+
         return division
 
     def __calcFeats(self, division):
@@ -147,9 +150,9 @@ class Sensor:
             ax.set_ylabel('Frequency Domain (Spectrum) Magnitude')
             ax.set_xlim(-self.__frequency / 2, self.__frequency / 2)
             ax.set_ylim(-5, 125)
-            
             if self.__savePlot: plt.savefig('graficos/fftfreqparte' + str(index) + '.png')
             plt.show()
+
             plt.plot(X)
             if self.__savePlot: plt.savefig('graficos/fftparte' + str(index) + '.png')
             plt.show()
@@ -180,8 +183,6 @@ class Sensor:
                 level = level + 1
                 limiar = vMin+(level+1)*distLevels
             quantized_coeffs.append(level)
-        
-        #quantized_coeffs = np.array(quantized_coeffs)
 
         if self.__verbose:
             print("\nDados:")
@@ -193,14 +194,19 @@ class Sensor:
         return quantized_coeffs
     
     def getCommitmentMessage(self):
+        # Criação da mensagem de compromisso
         message = {}
         self.__keyPrivate = random.getrandbits(128)
         self.__createBlocks()
         self.__hashBlocks()
+        self.__Nounce = random.randint(0, 100)
+        message["ID"] = self.__IDSensor
+        message["Nounce"] = self.__Nounce
         message["HASHEDBLOCKS"] = self.__matrixU
-        message["MAC"] = self.__macHMAC(str(self.__matrixU), str(self.__keyPrivate))
+        message["MAC"] = self.__macHMAC(str(self.__IDSensor)+str(self.__Nounce)+str(self.__matrixU), str(self.__keyPrivate))
         return message
 
+    # Dividindo as características em blocos
     def __createBlocks(self):
         blocksBin = []
 
@@ -221,6 +227,7 @@ class Sensor:
 
         return blocksBin
 
+    # Gerando uma matriz de hash dos blocos
     def __hashBlocks(self):
         self.__matrixU = []
         for i in self.__blocksBin:
@@ -233,6 +240,7 @@ class Sensor:
             hashlib.sha256(hash_string.encode()).hexdigest()
         return sha_signature
     
+    # Geração da Message Authentication Code (MAC) com HMAC
     def __macHMAC(self, message, key):
         key = bytes(key, 'UTF-8')
         message = bytes(message, 'UTF-8')
@@ -242,10 +250,14 @@ class Sensor:
         
         return str(signature2, 'UTF-8')
 
+    # Desmembrando a mensagem de compromisso recebida do outro sensor
     def receiveCommitmentMessage(self, message):
+        self.__IDReceived = message["ID"] 
+        self.__NounceReceived = message["Nounce"]
         self.__matrixV = message["HASHEDBLOCKS"]
         self.__receivedCommitmentMAC = message["MAC"]
 
+    # Gerando a chave comum
     def processCommomKey(self):
         matrixW = self.__calcMatrixW(self.__matrixV)
         self.__keyCommon = self.__keyGen(matrixW)
@@ -260,8 +272,6 @@ class Sensor:
         return matrixW
     
     def __hammingDistance(self, str1, str2):
-        """Count the # of differences between equal length strings str1 and str2"""
-
         diffs = 0
         for ch1, ch2 in zip(str1, str2):
             if ch1 != ch2:
@@ -302,6 +312,7 @@ class Sensor:
                     minJ = j
         return minElement, minI, minJ
     
+    # Gerando a mensagem de descompromisso
     def getDecommitmentMessage(self):
         message = {}
         G = np.bitwise_xor(self.__keyPrivate, int(self.__keyCommon, 16))
@@ -309,17 +320,19 @@ class Sensor:
         message["MAC"] = self.__macHMAC(str(G), str(int(self.__keyCommon, 16)))
         return message
 
+    # Desmembrando a mensagem de descompromisso 
     def receiveDecommitmentMessage(self, message):
         receivedDecommitmentG = message["G"]
         receivedDecommitmentMAC = message["MAC"]
         return self.__checkMAC(receivedDecommitmentG, receivedDecommitmentMAC)
     
+    # Checando o MAC recebido
     def __checkMAC(self, receivedDecommitmentG, receivedDecommitmentMAC):
         if(self.__keyCommon != self.__hashSHA256('error')):
             checkMAC1 = self.__macHMAC(str(receivedDecommitmentG), str(int(self.__keyCommon, 16)))
             if(checkMAC1 == receivedDecommitmentMAC):
                 keyPrivateReceived = np.bitwise_xor(receivedDecommitmentG, int(self.__keyCommon, 16))
-                checkMAC2 = self.__macHMAC(str(self.__matrixV), str(keyPrivateReceived))
+                checkMAC2 = self.__macHMAC(str(self.__IDReceived)+str(self.__NounceReceived)+str(self.__matrixV), str(keyPrivateReceived))
                 if(checkMAC2 == self.__receivedCommitmentMAC):
                     #print("Accepted")
                     return True

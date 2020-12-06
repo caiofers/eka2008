@@ -2,7 +2,7 @@ import wfdb
 import random
 import time
 
-from Sensor import Sensor
+from classes.Sensor import Sensor
 
 def featStatistics():
     ARArray = []
@@ -41,7 +41,9 @@ def featStatistics():
     print("Rejection Rate: " + str((sum(RRArray)/len(RRArray))*100) + "%")
     print("False Acceptance Rate: " + str((sum(FARArray)/len(FARArray))*100) + "%")
 
-    archive = open('featStatistics.txt', 'w')
+    # Gerar arquivo com as análises na pasta analysis
+    archive = open('analysis/featStatistics.txt', 'w')
+    
     archive.write("\nTotal Statistics")
     archive.write("\nAcceptance Rate: " + str((sum(ARArray)/len(ARArray))*100) + "%")
     archive.write("\nFalse Rejection Rate: " + str((sum(FRRArray)/len(FRRArray))*100) + "%")
@@ -88,14 +90,19 @@ def testFAR(recordNum, iterations, sampleVariation):
 
 
 def EKAPROTOCOL(recordTransmitter, recordReceiver):
-
+    # Definindo frequência e quantidade de tempo para coleta das amostras
     frequency = 500
     seconds = 10
 
+    # Quantidade de blocos de características que devem ser gerados
     numberOfBlocks = 20
 
-    sensorTransmitter = Sensor(frequency, seconds, numberOfBlocks)
-    sensorReceiver = Sensor(frequency, seconds, numberOfBlocks)
+    # Identificadores para o transmissor e receptor, respectivamente 
+    IDt = 1
+    IDr = 2
+
+    sensorTransmitter = Sensor(frequency, seconds, numberOfBlocks, IDt)
+    sensorReceiver = Sensor(frequency, seconds, numberOfBlocks, IDr)
 
     sensorTransmitter.extractFeats(recordTransmitter)
     sensorReceiver.extractFeats(recordReceiver)

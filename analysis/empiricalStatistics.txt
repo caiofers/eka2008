@@ -1,0 +1,52 @@
+
+Total statistics
+
+Time to Extract Features on Transmitter
+Mean: 12,33
+Standard Deviation: 1,43
+Variance: 2,05
+
+Time to Extract Features on Receiver
+Mean: 12,19
+Standard Deviation: 1,29
+Variance: 1,67
+
+Time of commitment phase on Transmitter
+Mean: 0,08
+Standard Deviation: 0,27
+Variance: 0,07
+
+Time of commitment phase on Receiver
+Mean: 0,04
+Standard Deviation: 0,2
+Variance: 0,04
+
+Time to process common key on Transmitter
+Mean: 2,38
+Standard Deviation: 0,66
+Variance: 0,44
+
+Time to process common key on Receiver
+Mean: 2,36
+Standard Deviation: 0,62
+Variance: 0,39
+
+Time of de-commitment phase on Transmitter
+Mean: 0,08
+Standard Deviation: 0,27
+Variance: 0,07
+
+Time of de-commitment phase on Receiver
+Mean: 0,08
+Standard Deviation: 0,27
+Variance: 0,07
+
+Total Time Transmmiter
+Mean: 14,87
+Standard Deviation: 1,47
+Variance: 2,17
+
+Total Time Receiver
+Mean: 14,67
+Standard Deviation: 1,34
+Variance: 1,8

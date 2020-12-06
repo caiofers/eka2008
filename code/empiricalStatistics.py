@@ -3,7 +3,7 @@ import time
 import statistics
 import tracemalloc
 
-from Sensor import Sensor
+from classes.Sensor import Sensor
 
 def timeStatistics():
     timeExtractFeatTransmitterArray = []
@@ -16,16 +16,12 @@ def timeStatistics():
     timeDeCommitmentPhaseReceiverArray = []
     totalTimeTransmitterArray = []
     totalTimeReceiverArray = []
-    memoryPeakArray = []
 
     for i in range(50):
         recordTransmitter = wfdb.rdrecord('samples/'+str(i+1), physical=False, sampfrom=0, channel_names=['avf'])
         recordReceiver = wfdb.rdrecord('samples/'+str(i+1), physical=False, sampfrom=0, channel_names=['avf'])
         
-        tracemalloc.start()
         timeExtractFeatTransmitter, timeExtractFeatReceiver, timeCommitmentPhaseTransmitter, timeCommitmentPhaseReceiver, timeProcessCommomKeyTransmitter, timeProcessCommomKeyReceiver, timeDeCommitmentPhaseTransmitter, timeDeCommitmentPhaseReceiver = EKAPROTOCOL(recordTransmitter, recordReceiver)
-        current, peak = tracemalloc.get_traced_memory()
-        tracemalloc.stop()
 
         timeExtractFeatTransmitterArray.append(timeExtractFeatTransmitter)
         timeExtractFeatReceiverArray.append(timeExtractFeatReceiver)
@@ -38,8 +34,6 @@ def timeStatistics():
         totalTimeTransmitterArray.append(timeExtractFeatTransmitter + timeCommitmentPhaseTransmitter + timeProcessCommomKeyTransmitter + timeDeCommitmentPhaseTransmitter)
         totalTimeReceiverArray.append(timeExtractFeatReceiver + timeCommitmentPhaseReceiver + timeProcessCommomKeyReceiver + timeDeCommitmentPhaseReceiver)
 
-        memoryPeakArray.append(peak)
-
         print("\nTime to Extract Features on Transmitter: "+str(timeExtractFeatTransmitter))
         print("Time to Extract Features on Receiver: "+str(timeExtractFeatReceiver))
         print("Time of commitment phase on Transmitter: "+str(timeCommitmentPhaseTransmitter))
@@ -48,7 +42,6 @@ def timeStatistics():
         print("Time to process common key on Receiver: "+str(timeProcessCommomKeyReceiver))
         print("Time of de-commitment phase on Transmitter: "+str(timeDeCommitmentPhaseTransmitter))
         print("Time of de-commitment phase on Receiver: "+str(timeDeCommitmentPhaseReceiver))
-        print("Current memory usage is " + str(current) + " Bytes; Peak was " + str(peak) + " Bytes");
         print("Total time Transmitter: "+str(timeExtractFeatTransmitter + timeCommitmentPhaseTransmitter + timeProcessCommomKeyTransmitter + timeDeCommitmentPhaseTransmitter))
         print("Total time Receiver: "+str(timeExtractFeatReceiver + timeCommitmentPhaseReceiver + timeProcessCommomKeyReceiver + timeDeCommitmentPhaseReceiver))
 
@@ -105,15 +98,10 @@ def timeStatistics():
     print("Standard Deviation: " + str(statistics.pstdev(totalTimeReceiverArray)))
     print("Variance: " + str(statistics.pvariance(totalTimeReceiverArray)))
 
-    print("\nPeak Memory Usage")
-    print("Mean: " + str(statistics.mean(memoryPeakArray)) + " Bytes")
-    print("Standard Deviation: " + str(statistics.pstdev(memoryPeakArray)) + " Bytes")
-    print("Variance: " + str(statistics.pvariance(memoryPeakArray)) + " Bytes")
-
-    archive = open('empiricalStatistics', 'w')
+    # Gerar arquivo com as análises na pasta analysis
+    archive = open('analysis/empiricalStatistics.txt', 'w')
     
     archive.write("\nTotal statistics")
-
     archive.write("\n\nTime to Extract Features on Transmitter")
     archive.write("\nMean: " + str(round(statistics.mean(timeExtractFeatTransmitterArray), 2)).replace('.', ','))
     archive.write("\nStandard Deviation: " + str(round(statistics.pstdev(timeExtractFeatTransmitterArray), 2)).replace('.', ','))
@@ -163,21 +151,20 @@ def timeStatistics():
     archive.write("\nMean: " + str(round(statistics.mean(totalTimeReceiverArray), 2)).replace('.', ','))
     archive.write("\nStandard Deviation: " + str(round(statistics.pstdev(totalTimeReceiverArray), 2)).replace('.', ','))
     archive.write("\nVariance: " + str(round(statistics.pvariance(totalTimeReceiverArray), 2)).replace('.', ','))
-
-    archive.write()
-
+    
     archive.close()
 
 
 def EKAPROTOCOL(recordTransmitter, recordReceiver):
 
-    # Definindo frequencia e quantidade de tempo para coleta das amostras
+    # Definindo frequência e quantidade de tempo para coleta das amostras
     frequency = 500
     seconds = 10
 
-    # Definindo ordem do polinômio
+    # Quantidade de blocos de características que devem ser gerados
     numberOfBlocks = 20
 
+    # Identificadores para o transmissor e receptor, respectivamente 
     IDt = 1
     IDr = 2
 
@@ -191,58 +178,53 @@ def EKAPROTOCOL(recordTransmitter, recordReceiver):
     timeDeCommitmentPhaseTransmitter = 0
     timeDeCommitmentPhaseReceiver = 0
 
-    sensorTransmitter = Sensor(frequency, seconds, numberOfBlocks)
+    # Iniciando os dois sensores
+    sensorTransmitter = Sensor(frequency, seconds, numberOfBlocks, IDt)
+    sensorReceiver = Sensor(frequency, seconds, numberOfBlocks, IDr)
 
-    #sensorTransmitter.setPlot(True)
-    sensorReceiver = Sensor(frequency, seconds, numberOfBlocks)
-
-    inicio = time.time()
+    # Coleta dos tempos de cada etapa
+    begin = time.time()
     sensorTransmitter.extractFeats(recordTransmitter)
-    fim = time.time()
-    timeExtractFeatTransmitter = fim - inicio
+    end = time.time()
+    timeExtractFeatTransmitter = end - begin
 
-
-    inicio = time.time()
+    begin = time.time()
     sensorReceiver.extractFeats(recordReceiver)
-    fim = time.time()
-    timeExtractFeatReceiver = fim - inicio
+    end = time.time()
+    timeExtractFeatReceiver = end - begin
 
-    inicio = time.time()
+    begin = time.time()
     message = sensorReceiver.getCommitmentMessage()
     sensorTransmitter.receiveCommitmentMessage(message)    
-    fim = time.time()
-    timeCommitmentPhaseReceiver = fim - inicio
+    end = time.time()
+    timeCommitmentPhaseReceiver = end - begin
 
-
-    inicio = time.time()
+    begin = time.time()
     message = sensorTransmitter.getCommitmentMessage()
     sensorReceiver.receiveCommitmentMessage(message)
-    fim = time.time()
-    timeCommitmentPhaseTransmitter = fim - inicio
-
+    end = time.time()
+    timeCommitmentPhaseTransmitter = end - begin
     
-    inicio = time.time()
+    begin = time.time()
     sensorTransmitter.processCommomKey()
-    fim = time.time()
-    timeProcessCommomKeyTransmitter = fim - inicio
+    end = time.time()
+    timeProcessCommomKeyTransmitter = end - begin
     
-    inicio = time.time()
+    begin = time.time()
     sensorReceiver.processCommomKey()
-    fim = time.time()
-    timeProcessCommomKeyReceiver = fim - inicio
+    end = time.time()
+    timeProcessCommomKeyReceiver = end - begin
     
-    inicio = time.time()
+    begin = time.time()
     sensorReceiver.receiveDecommitmentMessage(sensorTransmitter.getDecommitmentMessage())
-    fim = time.time()
-    timeDeCommitmentPhaseReceiver = fim - inicio
+    end = time.time()
+    timeDeCommitmentPhaseReceiver = end - begin
 
-
-    inicio = time.time()
+    begin = time.time()
     sensorTransmitter.receiveDecommitmentMessage(sensorReceiver.getDecommitmentMessage())
-    fim = time.time()
-    timeDeCommitmentPhaseTransmitter = fim - inicio
+    end = time.time()
+    timeDeCommitmentPhaseTransmitter = end - begin
     
     return timeExtractFeatTransmitter*1000, timeExtractFeatReceiver*1000, timeCommitmentPhaseTransmitter*1000, timeCommitmentPhaseReceiver*1000, timeProcessCommomKeyTransmitter*1000, timeProcessCommomKeyReceiver*1000, timeDeCommitmentPhaseTransmitter*1000, timeDeCommitmentPhaseTransmitter*1000
-
 
 timeStatistics()

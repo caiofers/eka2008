@@ -2,7 +2,7 @@ import wfdb
 import statistics
 import tracemalloc
 
-from Sensor import Sensor
+from classes.Sensor import Sensor
 
 def memoryPeakStatistics():
     memoryPeakExtractFeatTransmitterArray = []
@@ -97,7 +97,8 @@ def memoryPeakStatistics():
     print("Standard Deviation: " + str(statistics.pstdev(totalMemoryPeakReceiverArray)))
     print("Variance: " + str(statistics.pvariance(totalMemoryPeakReceiverArray)))
 
-    archive = open('memoryStatistics', 'w')
+    # Gerar arquivo com as análises na pasta analysis
+    archive = open('analysis/memoryStatistics.txt', 'w')
 
     archive.write("\nTotal statistics")
 
@@ -154,18 +155,18 @@ def memoryPeakStatistics():
     archive.close()
 
 def EKAPROTOCOL(recordTransmitter, recordReceiver):
-
-    # Definindo frequencia e quantidade de tempo para coleta das amostras
+    # Definindo frequência e quantidade de tempo para coleta das amostras
     frequency = 500
     seconds = 10
 
-    # Definindo ordem do polinômio
+    # Quantidade de blocos de características que devem ser gerados
     numberOfBlocks = 20
 
+    # Identificadores para o transmissor e receptor, respectivamente 
     IDt = 1
     IDr = 2
 
-    # Definindo variáveis para coletar tempo
+    # Definindo variáveis para coletar memória
     memoryPeakExtractFeatTransmitter = 0
     memoryPeakExtractFeatReceiver = 0
     memoryPeakCommitmentPhaseTransmitter = 0
@@ -175,10 +176,8 @@ def EKAPROTOCOL(recordTransmitter, recordReceiver):
     memoryPeakDeCommitmentPhaseTransmitter = 0
     memoryPeakDeCommitmentPhaseReceiver = 0
 
-    sensorTransmitter = Sensor(frequency, seconds, numberOfBlocks)
-
-    #sensorTransmitter.setPlot(True)
-    sensorReceiver = Sensor(frequency, seconds, numberOfBlocks)
+    sensorTransmitter = Sensor(frequency, seconds, numberOfBlocks, IDt)
+    sensorReceiver = Sensor(frequency, seconds, numberOfBlocks, IDr)
 
     tracemalloc.start()
     sensorTransmitter.extractFeats(recordTransmitter)

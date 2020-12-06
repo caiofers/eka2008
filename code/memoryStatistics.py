@@ -179,12 +179,12 @@ def EKAPROTOCOL(recordTransmitter, recordReceiver):
     sensorTransmitter = Sensor(frequency, seconds, numberOfBlocks, IDt)
     sensorReceiver = Sensor(frequency, seconds, numberOfBlocks, IDr)
 
+    # Coleta dos picos de memória de cada etapa
     tracemalloc.start()
     sensorTransmitter.extractFeats(recordTransmitter)
     current, peak = tracemalloc.get_traced_memory()
     tracemalloc.stop()
     memoryPeakExtractFeatTransmitter = peak
-
 
     tracemalloc.start()
     sensorReceiver.extractFeats(recordReceiver)
@@ -199,14 +199,12 @@ def EKAPROTOCOL(recordTransmitter, recordReceiver):
     tracemalloc.stop()
     memoryPeakCommitmentPhaseReceiver = peak
 
-
     tracemalloc.start()
     message = sensorTransmitter.getCommitmentMessage()
     sensorReceiver.receiveCommitmentMessage(message)
     current, peak = tracemalloc.get_traced_memory()
     tracemalloc.stop()
     memoryPeakCommitmentPhaseTransmitter = peak
-
     
     tracemalloc.start()
     sensorTransmitter.processCommomKey()
@@ -226,7 +224,6 @@ def EKAPROTOCOL(recordTransmitter, recordReceiver):
     tracemalloc.stop()
     memoryPeakDeCommitmentPhaseReceiver = peak
 
-
     tracemalloc.start()
     sensorTransmitter.receiveDecommitmentMessage(sensorReceiver.getDecommitmentMessage())
     current, peak = tracemalloc.get_traced_memory()
@@ -234,6 +231,5 @@ def EKAPROTOCOL(recordTransmitter, recordReceiver):
     memoryPeakDeCommitmentPhaseTransmitter = peak
     
     return memoryPeakExtractFeatTransmitter, memoryPeakExtractFeatReceiver, memoryPeakCommitmentPhaseTransmitter, memoryPeakCommitmentPhaseReceiver, memoryPeakProcessCommomKeyTransmitter, memoryPeakProcessCommomKeyReceiver, memoryPeakDeCommitmentPhaseTransmitter, memoryPeakDeCommitmentPhaseTransmitter
-
 
 memoryPeakStatistics()

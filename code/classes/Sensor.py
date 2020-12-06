@@ -114,7 +114,7 @@ class Sensor:
                 plt.show()
                 index = index + 1
 
-            # Construindo vetor de caracteristicas com cada ponto (Cada ponto resulta em 4 bits)
+            # Construindo vetor de características com cada ponto (Cada ponto resulta em 4 bits)
             for k in range(len(quantizedArray)):
                 featVectorBin.append(np.binary_repr(quantizedArray[k], width=4))
 
@@ -133,7 +133,7 @@ class Sensor:
         # Aplicando Fast Fourier Transform para 128 pontos
         X = fftpack.fft(data, n=nOfPoints)
 
-        #Coletando a metade dos pontos da FFT, já que os pontos tem caracteristica espelhada
+        # Coletando a metade dos pontos da FFT, já que os pontos tem característica espelhada
         X = X[0:64]
 
         if self.__verbose:
@@ -192,9 +192,9 @@ class Sensor:
             print("\nQUANTIZAÇÃO - FIM\n")
         
         return quantized_coeffs
-    
+        
+    # Criação da mensagem de compromisso
     def getCommitmentMessage(self):
-        # Criação da mensagem de compromisso
         message = {}
         self.__keyPrivate = random.getrandbits(128)
         self.__createBlocks()
